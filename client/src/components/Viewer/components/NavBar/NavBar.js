@@ -10,7 +10,7 @@ function NavBar(props) {
   return (
     <div className='navbar'>
       <div id='ihub-logo' ></div>
-      <p id='heading'>HISTOPATHOLOGY VIEWER</p>
+      <p id='heading'>Data Anonymisation</p>
       <button id="logout-btn" onClick={handleClick}>Logout</button>
     </div>
   )
