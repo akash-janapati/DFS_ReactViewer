@@ -28,7 +28,9 @@ let convert_tiff_options = {
 
 router.get("/:url",async (req,res) => {
     try{
+        console.log(req);
         let user = await get_user_bucket(req.user.user_email); // get this from database (sql)
+        // console.log(user);
         let bucketName = "datadrive-dev"
         if(user == undefined){
             user = await map_user_to_bucket(req.user.user_email,req.params.url);

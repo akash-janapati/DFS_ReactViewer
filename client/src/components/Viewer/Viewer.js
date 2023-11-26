@@ -18,9 +18,9 @@ function Viewer(props) {
   const [progressValue, setProgressValue] = useState(0)
   const currentFileSelected = useRef(null)
   const [fileInfo, setFileInfo] = useState({})
-  const [uploadPercentage,setUploadPercentage] = useState({});
-  const [recentUploaded,setRecentUploaded] = useState(null);
-  const [isConnected,setIsConnected] = useState(false);
+  const [uploadPercentage, setUploadPercentage] = useState({});
+  const [recentUploaded, setRecentUploaded] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   const email = JSON.parse(
     localStorage.getItem('dfs-user')
@@ -38,6 +38,8 @@ function Viewer(props) {
   }
 
   function handleChange(e) {
+    console.log(e);
+    console.log(e.target.files[0]);
     const file = e.target.files[0]
     setCurrentFile((prevValue) => ({
       ...prevValue,
@@ -51,16 +53,16 @@ function Viewer(props) {
     socket.on('connect', () => {
       console.log('Connected:', socket.connected); // Should be true
       setIsConnected(true);
-      socket.emit('addUser',JSON.parse(localStorage.getItem("dfs-user"))?.["token"])
+      socket.emit('addUser', JSON.parse(localStorage.getItem("dfs-user"))?.["token"])
     });
 
-    socket.on('progress',(progress_data) => {
-      console.log("progress data->",progress_data)
-      if(progress_data.Data.Uploaded_Files != undefined && progress_data.Data.Total_Files!= undefined){
+    socket.on('progress', (progress_data) => {
+      console.log("progress data->", progress_data)
+      if (progress_data.Data.Uploaded_Files != undefined && progress_data.Data.Total_Files != undefined) {
         let num = progress_data.Data.Uploaded_Files;
         let den = progress_data.Data.Total_Files;
-        let per = (num/den) * 100 ;
-        const fileName = currentFile.name.name; 
+        let per = (num / den) * 100;
+        const fileName = currentFile.name.name;
         setUploadPercentage((prevValue) => ({
           ...prevValue,
           [fileName]: per,
@@ -157,18 +159,42 @@ function Viewer(props) {
             <></>
           )}
         </div>
+        <div className="dropdown-container">
+          <div className="dropdown">
+            {/* Create a dropdown menu for objects to anonymize, example: "faces","numberplates" */}
+            <select name="object" id="object" className="dropdown-select">
+              <option value="faces">Faces</option>
+              <option value="numberplates">Number Plates</option>
+            </select>
+          </div>
+          <div className="dropdown">
+            {/* Similarly, for anonymisation techniques, masking, blurring, replace, etc. */}
+            <select name="technique" id="technique" className="dropdown-select">
+              <option value="masking">Masking</option>
+              <option value="blurring">Blurring</option>
+              <option value="replace">Replace</option>
+            </select>
+          </div>
+          
+            {/* a process image button, with stylings */}
+            <button className="process-image">Process Image</button>
+
+            
+          {/* </div> */}
+        </div>
       </div>
       <div className='get-files'>
-      <GetFiles
+        <GetFiles
           fileObj={currentFile}
           uploadStatus={isUploaded}
           email={shortEmail}
-          uploadPercentage = {uploadPercentage}
-          recentUploaded = {recentUploaded}
+          uploadPercentage={uploadPercentage}
+          recentUploaded={recentUploaded}
         />
       </div>
+      
       <div className='status'>
-        <StatusInfo uploadPercentage={uploadPercentage} isConnected={isConnected}/>  
+        <StatusInfo uploadPercentage={uploadPercentage} isConnected={isConnected} />
       </div>
     </div>
   )

@@ -67,7 +67,9 @@ function App() {
     <>
       <NavBar logout={logoutUser}/>
       <Routes>
+        {/* If we are at '/'  and we are logged in, then render Viewer component, with logoutUser function as props to it, if not loggedin, transfer to login page*/}
         <Route exact path='/' element={isLoggedIn ? <Viewer logout={logoutUser} /> : <Navigate replace to="/login" />}/>
+        {/* If  */}
         <Route exact path='/login' element={isLoggedIn ? <Navigate replace to="/" /> : <Login checkUser={checkUser} />} />
       </Routes>
       <CustomToastContainer />
