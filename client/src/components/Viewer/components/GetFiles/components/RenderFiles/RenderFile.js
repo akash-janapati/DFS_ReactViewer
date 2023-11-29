@@ -80,7 +80,7 @@ function RenderFile(props) {
         reversedImageNames.forEach((newImage) => {
           getImageLink(newImage)
         })
-        // toast.success('Upload Completed!')
+        toast.success('Upload Completed!')
       }
     } else {
       setAllImageName(props.info)
@@ -124,6 +124,8 @@ function RenderFile(props) {
       console.log(error)
     }
   }
+
+  
 
   async function getImageLink(image) {
     try {
@@ -183,8 +185,25 @@ function RenderFile(props) {
     setFormat(imagetype)
     setViewerImage(allImagesLinks[allImageName[num].name.split('.')[0]])
     setImageName(allImageName[num])
+    
+
+    // make a copy of the current image state
+    let current_image_state = {
+      name: allImageName[num].name,
+      format: allImageName[num].format,
+      link: allImagesLinks[allImageName[num].name.split('.')[0]],
+    }
+
+    console.log('Current Image State, from RenderFile', current_image_state)
+    props.updateParentState(current_image_state);
+
+    console.log('All Images Links:', allImagesLinks);
     setLoading(false)
+    
+    // console.log();
   }
+
+  
 
   function handleDelete(event, file) {
     props.onDelete(event, file)
@@ -283,4 +302,5 @@ function RenderFile(props) {
   )
 }
 
-export default RenderFile
+
+export default RenderFile 

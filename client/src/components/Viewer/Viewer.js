@@ -21,6 +21,16 @@ function Viewer(props) {
   const [uploadPercentage, setUploadPercentage] = useState({});
   const [recentUploaded, setRecentUploaded] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [parentState, setParentState] = useState({
+    "name": null,
+    "format": null,
+    "link": null,
+  });
+
+  const updateParentState = (updatedChildState) => {
+    setParentState(updatedChildState);
+  };
+  
 
   const email = JSON.parse(
     localStorage.getItem('dfs-user')
@@ -38,13 +48,58 @@ function Viewer(props) {
   }
 
   function handleChange(e) {
-    console.log(e);
-    console.log(e.target.files[0]);
+    // console.log(e);
+    // console.log(e.target.files[0]);
     const file = e.target.files[0]
     setCurrentFile((prevValue) => ({
       ...prevValue,
       name: file,
     }))
+  }
+
+  function handleProcess(e) {
+    console.log("Processing Image");
+    console.log('Status of image, as viewed from parent: ',parentState);
+
+    // if one of the parent state is null, then don't process the image
+    // print a toast message saying "Please select an image to process"
+    if (parentState.name == null || parentState.format == null || parentState.link == null) {
+      // make the toast theme red
+      toast.warn("Please select an image to process");
+      return;
+    }
+
+    // get the dropdown values
+    let object = document.getElementById("object").value;
+    let technique = document.getElementById("technique").value;
+    console.log("Object: ", object);
+    console.log("Technique: ", technique);
+
+    // make an api request to the backend
+    // send the object and technique as params
+    // image name, format, link as body
+    // get the response, that's all
+    // toast the response
+    let image_name = parentState.name;
+    let image_format = parentState.format;
+    let image_link = parentState.link;
+    let image_body = {
+      "name": image_name,
+      "format": image_format,
+      "link": image_link,
+    };
+
+    let image_params = {
+      "object": object,
+      "technique": technique,
+    };
+
+
+
+    
+
+    
+    
   }
 
   async function uploadFile(e) {
@@ -79,6 +134,39 @@ function Viewer(props) {
     formData.append('file', currentFile.name)
     let bucketURL = config.BASE_URL + '/objects/' + shortEmail
 
+    if (
+      currentFile.name.name &&
+      ['jpg', 'jpeg'].includes(
+        currentFile.name.name.split('.').pop().toLowerCase()
+      )
+    ) {
+      toast.info('Converting JPG/JPEG to PNG')
+      // Convert the JPG/JPEG file to PNG
+      const convertedFile = await convertToPng(currentFile.name);
+      console.log(convertedFile);
+      // if error in conversion, then return
+      if (convertedFile instanceof Error) {
+        toast.error('Error in Uploading File')
+        return;
+      }
+      // clear the formData
+      formData.delete('file');
+      // append the converted file to formData
+      formData.append('file', convertedFile);
+      console.log(convertedFile.name);
+      
+      // change the currentFile to convertedFile
+      setCurrentFile((prevValue) => ({
+        ...prevValue,
+        name: convertedFile.name,
+        count: prevValue.count + 1,
+      }))
+    }
+    
+    formData.append('file', currentFile.name);
+    console.log(formData.get('file'));
+    
+    console.log(currentFile.name.name);
     let res = await axios.get(config.BASE_URL + '/isUploaded/' + shortEmail, {
       headers: {
         authorization:
@@ -95,6 +183,8 @@ function Viewer(props) {
     } else {
       try {
         console.log('Initiating upload')
+        console.log('File:', currentFile.name.name)
+        console.log(formData)
         let response = await axios.post(bucketURL, formData, {
           headers: {
             authorization:
@@ -131,6 +221,38 @@ function Viewer(props) {
         console.log(error)
       }
     }
+  }
+
+   async function convertToPng(file) {
+    const image = new Image();
+  
+    return new Promise((resolve, reject) => {
+      image.onload = function () {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, image.width, image.height);
+  
+        canvas.toBlob(
+          (blob) => {
+            const file_name = file.name.split('.')[0];
+            const convertedFile = new File([blob], `${file_name}.png`, {
+              type: 'image/png',
+            });
+            resolve(convertedFile);
+          },
+          'image/png',
+          1
+        );
+      };
+  
+      image.onerror = function () {
+        reject(new Error('Error loading image for conversion.'));
+      };
+  
+      image.src = URL.createObjectURL(file);
+    });
   }
 
   return (
@@ -177,7 +299,7 @@ function Viewer(props) {
           </div>
           
             {/* a process image button, with stylings */}
-            <button className="process-image">Process Image</button>
+            <button className="process-image" onClick={handleProcess}>Process Image</button>
 
             
           {/* </div> */}
@@ -190,6 +312,7 @@ function Viewer(props) {
           email={shortEmail}
           uploadPercentage={uploadPercentage}
           recentUploaded={recentUploaded}
+          updateParentState={updateParentState}
         />
       </div>
       
