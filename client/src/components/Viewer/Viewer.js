@@ -25,6 +25,7 @@ function Viewer(props) {
     "name": null,
     "format": null,
     "link": null,
+    // "processed": "false",
   });
 
   const updateParentState = (updatedChildState) => {

@@ -5,7 +5,7 @@ import './RenderFile.css'
 import { config } from '../../../../../Config/config'
 import { toast } from 'react-toastify'
 import { FaRegImages } from 'react-icons/fa'
-import { AiFillCloseCircle } from 'react-icons/ai'
+import { AiFillCloseCircle, AiOutlineFileImage } from 'react-icons/ai'
 import StatusInfo from '../../../../../statusInfo'
 
 function RenderFile(props) {
@@ -20,6 +20,8 @@ function RenderFile(props) {
   const [outer, setOuter] = useState()
   const [isLoding, setLoading] = useState(false)
   const [showThumbnails, setShowThumbnails] = useState(true)
+  const [showProcessed, setShowProcessed] = useState(false)
+  const [allProccessedImages, setAllProccessedImages] = useState([])
 
   useEffect(() => {
     const refreshInterval = setInterval(() => {
@@ -125,7 +127,7 @@ function RenderFile(props) {
     }
   }
 
-  
+
 
   async function getImageLink(image) {
     try {
@@ -185,7 +187,7 @@ function RenderFile(props) {
     setFormat(imagetype)
     setViewerImage(allImagesLinks[allImageName[num].name.split('.')[0]])
     setImageName(allImageName[num])
-    
+
 
     // make a copy of the current image state
     let current_image_state = {
@@ -199,11 +201,11 @@ function RenderFile(props) {
 
     console.log('All Images Links:', allImagesLinks);
     setLoading(false)
-    
+
     // console.log();
   }
 
-  
+
 
   function handleDelete(event, file) {
     props.onDelete(event, file)
@@ -256,29 +258,97 @@ function RenderFile(props) {
         </div>
       ) : (
         <></>
-      )}
+      )
+      }
       {showThumbnails ? (
-        <AiFillCloseCircle
-          title='Hide Thumbnails'
-          onClick={() => {
-            setShowThumbnails(!showThumbnails)
-          }}
-          style={{ height: '30px', width: '30px', marginRight: '10px' }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <AiFillCloseCircle
+            title='Hide Thumbnails'
+            onClick={() => {
+              setShowThumbnails(!showThumbnails)
+            }}
+            style={{ height: '30px', width: '30px', margin: '10px' }}
+          />
+          <AiOutlineFileImage
+            title='Processed Images'
+            onClick={() => {
+              setShowProcessed(!showProcessed);
+            }}
+            style={{ height: '30px', width: '30px', margin: '10px' }}
+          />
+
+        </div>
       ) : (
-        <FaRegImages
-          title='Show Thumbnails'
-          onClick={() => {
-            setShowThumbnails(!showThumbnails)
-          }}
-          style={{
-            height: '30px',
-            width: '30px',
-            marginRight: '10px',
-            marginLeft: '10px',
-          }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <FaRegImages
+            title='Show Thumbnails'
+            onClick={() => {
+              setShowThumbnails(!showThumbnails)
+            }}
+            style={{
+              height: '30px',
+              width: '30px',
+              margin: '10px',
+
+            }}
+          />
+          <AiOutlineFileImage
+            title='Show Processed Images'
+            onClick={() => {
+              setShowProcessed(!showProcessed);
+
+            }}
+            style={{ height: '30px', width: '30px', margin: '10px' }}
+          />
+
+        </div>
       )}
+
+      {showProcessed ? (
+        <div className='button-container'>
+          {allImageName.map((file, i) => {
+            const buttonStyles = {
+              margin: '10px',
+              backgroundImage: allImagesLinks[file.name]
+                ? `url(${allImagesLinks[file.name]})`
+                : 'none',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: 'cover',
+              color: '#333',
+              objectFit: 'cover',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              height: '100px',
+              width: '100px',
+            }
+            return (
+              <div className='thumbnail-container'>
+                <img
+                  className='thumnails'
+                  onClick={handleClick}
+                  style={buttonStyles}
+                  key={i}
+                  id={i}
+                />
+                <div className='name-del'>
+                  <p className='image-name'>{file.name + '.' + file.format}</p>
+                  <button
+                    className='del-btn'
+                    value={file}
+                    onClick={(event) => handleDelete(event, file)}
+                  >
+                    {' '}
+                    <i className='bi bi-archive'></i>
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <></>
+      )}
+
       <div className='viewer-container'>
         <p id='viewer-image-name'>
           {viewerImage ? imageName.name + '.' + imageName.format : ' '}
