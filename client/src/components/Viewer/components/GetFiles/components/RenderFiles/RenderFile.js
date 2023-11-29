@@ -4,9 +4,10 @@ import OpenSeadragonViewer from './components/OpenSeaDragon/OpenSeadragonViewer'
 import './RenderFile.css'
 import { config } from '../../../../../Config/config'
 import { toast } from 'react-toastify'
-import { FaRegImages } from 'react-icons/fa'
+import { FaRegImages,FaImage,FaCode } from 'react-icons/fa'
 import { AiFillCloseCircle, AiOutlineFileImage } from 'react-icons/ai'
 import StatusInfo from '../../../../../statusInfo'
+import { indexOf } from 'openseadragon'
 
 function RenderFile(props) {
   const [viewerImage, setViewerImage] = useState()
@@ -22,7 +23,8 @@ function RenderFile(props) {
   const [showThumbnails, setShowThumbnails] = useState(true)
   const [showProcessed, setShowProcessed] = useState(false)
   const [allProccessedImages, setAllProccessedImages] = useState([])
-
+  const [allProccessedImagesLinks, setAllProccessedImagesLinks] = useState({})
+  const [thumb, setThumb] = useState(true);
   useEffect(() => {
     const refreshInterval = setInterval(() => {
       props.getFiles()
@@ -56,9 +58,16 @@ function RenderFile(props) {
         console.log('Removed Images found:', removedImageNames)
 
         const updatedImageLinks = { ...allImagesLinks }
+        const processedLinks = { ...allProccessedImagesLinks }
 
         removedImageNames.forEach((removedImageName) => {
           const indexToRemove = allImageName.findIndex(
+            (imageName) =>
+              imageName.name === removedImageName.name &&
+              imageName.format === removedImageName.format
+          )
+
+          const processedIndexToRemove = allProccessedImages.findIndex(
             (imageName) =>
               imageName.name === removedImageName.name &&
               imageName.format === removedImageName.format
@@ -70,8 +79,17 @@ function RenderFile(props) {
             allImageName.splice(indexToRemove, 1)
             delete updatedImageLinks[name]
           }
+
+          if (
+            processedIndexToRemove !== -1 &&
+            processedLinks.hasOwnProperty(name)
+          ) {
+            allProccessedImages.splice(processedIndexToRemove, 1)
+            delete processedLinks[name]
+          }
         })
         setAllImagesLinks(updatedImageLinks)
+        setAllProccessedImagesLinks(processedLinks)
       }
 
       if (newImageNames.length > 0) {
@@ -85,7 +103,23 @@ function RenderFile(props) {
         toast.success('Upload Completed!')
       }
     } else {
-      setAllImageName(props.info)
+
+      const temp_allProccessedImages = [...allProccessedImages]
+      const temp_allImageName = [...allImageName]
+
+      props.info.forEach((image) => {
+        if (image.name.indexOf('processed') === -1) {
+          temp_allImageName.push(image)
+        } else {
+          temp_allProccessedImages.push(image)
+        }
+      })
+
+      // divide the 
+
+      setAllImageName(temp_allImageName)
+      setAllProccessedImages(temp_allProccessedImages)
+
     }
 
     setPreviousImageNames(props.info)
@@ -115,13 +149,22 @@ function RenderFile(props) {
       )
 
       const imageLinks = {}
+      const processLinks = {}
       responses.forEach((response) => {
         let name = response.data.imageName.split('.')[0]
         let link = response.data.imageUrl
-        imageLinks[name] = link
+        // imageLinks[name] = link
+
+        if (name.indexOf('processed') === -1) {
+          imageLinks[name] = link
+        }
+        else {
+          processLinks[name] = link
+        }
       })
 
       setAllImagesLinks(imageLinks)
+      setAllProccessedImagesLinks(processLinks)
     } catch (error) {
       console.log(error)
     }
@@ -145,8 +188,14 @@ function RenderFile(props) {
           let name = response.data.imageName.split('.')[0]
           let link = response.data.imageUrl
 
+          
+          if (name.indexOf('processed') === -1) {
           allImagesLinks[name] = link
           allImageName.unshift(image)
+          } else {
+            allProccessedImagesLinks[name] = link
+            allProccessedImages.unshift(image)
+          }
         })
         .catch((error) => {
           console.log(error)
@@ -156,9 +205,13 @@ function RenderFile(props) {
     }
   }
 
-  async function handleClick(e) {
+  async function handleClick(e,thumb) {
     setLoading(true)
     let num = e.target.id
+
+    console.log("Thumb: ", thumb);
+
+    if (thumb) {
     const imagetype = allImageName[num].format
     const dir_ = allImageName[num].name.split('.')[0]
     if (imagetype != 'png' && imagetype != 'jpeg') {
@@ -202,6 +255,38 @@ function RenderFile(props) {
     console.log('All Images Links:', allImagesLinks);
     setLoading(false)
 
+  }else{
+    const imagetype = allProccessedImages[num].format
+    const dir_ = allProccessedImages[num].name.split('.')[0]
+    if (imagetype != 'png' && imagetype != 'jpeg') {
+      let imageObj = { baseDir: dir_ + '/temp/' + dir_ + '_files/' }
+      await axios
+        .get(config.BASE_URL + '/getURL/imagePyramid/' + props.email, {
+          params: imageObj,
+          headers: {
+            authorization:
+              'Bearer ' +
+              JSON.parse(localStorage.getItem('dfs-user'))?.['token'],
+          },
+        })
+        .then((response) => {
+          setOuter(response.data.outer)
+          return response.data.image
+        })
+        .then((image) => {
+          setPyramid(image)
+        })
+        .catch((error) => {
+          console.log(error)
+          return null
+        })
+    }
+    setFormat(imagetype)
+    setViewerImage(allProccessedImagesLinks[allProccessedImages[num].name.split('.')[0]])
+    setImageName(allProccessedImages[num])
+    setLoading(false)
+  }
+
     // console.log();
   }
 
@@ -236,7 +321,7 @@ function RenderFile(props) {
               <div className='thumbnail-container'>
                 <img
                   className='thumnails'
-                  onClick={handleClick}
+                  onClick={e => {setThumb(true);handleClick(e,true)}}
                   style={buttonStyles}
                   key={i}
                   id={i}
@@ -260,57 +345,14 @@ function RenderFile(props) {
         <></>
       )
       }
-      {showThumbnails ? (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <AiFillCloseCircle
-            title='Hide Thumbnails'
-            onClick={() => {
-              setShowThumbnails(!showThumbnails)
-            }}
-            style={{ height: '30px', width: '30px', margin: '10px' }}
-          />
-          <AiOutlineFileImage
-            title='Processed Images'
-            onClick={() => {
-              setShowProcessed(!showProcessed);
-            }}
-            style={{ height: '30px', width: '30px', margin: '10px' }}
-          />
-
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <FaRegImages
-            title='Show Thumbnails'
-            onClick={() => {
-              setShowThumbnails(!showThumbnails)
-            }}
-            style={{
-              height: '30px',
-              width: '30px',
-              margin: '10px',
-
-            }}
-          />
-          <AiOutlineFileImage
-            title='Show Processed Images'
-            onClick={() => {
-              setShowProcessed(!showProcessed);
-
-            }}
-            style={{ height: '30px', width: '30px', margin: '10px' }}
-          />
-
-        </div>
-      )}
-
+      
       {showProcessed ? (
         <div className='button-container'>
-          {allImageName.map((file, i) => {
+          {allProccessedImages.map((file, i) => {
             const buttonStyles = {
               margin: '10px',
-              backgroundImage: allImagesLinks[file.name]
-                ? `url(${allImagesLinks[file.name]})`
+              backgroundImage: allProccessedImagesLinks[file.name]
+                ? `url(${allProccessedImagesLinks[file.name]})`
                 : 'none',
               backgroundRepeat: 'no-repeat',
               backgroundSize: 'cover',
@@ -325,7 +367,7 @@ function RenderFile(props) {
               <div className='thumbnail-container'>
                 <img
                   className='thumnails'
-                  onClick={handleClick}
+                  onClick={(e) => {setThumb(false);handleClick(e,false)}}
                   style={buttonStyles}
                   key={i}
                   id={i}
@@ -348,6 +390,69 @@ function RenderFile(props) {
       ) : (
         <></>
       )}
+<div style={{ display: 'flex', flexDirection: 'column' }}>
+{showThumbnails ? (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <AiFillCloseCircle
+            title='Hide Thumbnails'
+            onClick={() => {
+              setShowThumbnails(!showThumbnails)
+            }}
+            style={{ height: '30px', width: '30px', margin: '10px' }}
+          />
+
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <FaRegImages
+            title='Show Thumbnails'
+            onClick={() => {
+              setShowThumbnails(!showThumbnails)
+            }}
+            style={{
+              height: '30px',
+              width: '30px',
+              margin: '10px',
+
+            }}
+          />
+
+        </div>
+      )}
+
+      {showProcessed ? (
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <AiFillCloseCircle
+            title='Hide Processed'
+            onClick={() => {
+              setShowProcessed(!showProcessed)
+            }}
+            style={{ height: '30px', width: '30px', margin: '10px' }}
+          />
+
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <FaCode
+            title='Show Processed'
+            onClick={() => {
+              setShowProcessed(!showProcessed)
+            }}
+            style={{
+              height: '30px',
+              width: '30px',
+              margin: '10px',
+
+            }}
+          />
+
+        </div>
+      )
+
+      }
+      </div>
+
 
       <div className='viewer-container'>
         <p id='viewer-image-name'>
