@@ -301,7 +301,11 @@ function RenderFile(props) {
   return (
     <div className='render-file-container'>
       {showThumbnails ? (
+        <div className="uploaded-images-container">
+        <p>Uploaded Images</p>
         <div className='button-container'>
+        
+
           {allImageName.map((file, i) => {
             const buttonStyles = {
               margin: '10px',
@@ -341,12 +345,16 @@ function RenderFile(props) {
             )
           })}
         </div>
+        </div>
       ) : (
         <></>
       )
       }
       
       {showProcessed ? (
+        <div className="uploaded-images-container">
+          <p class="part-title">Processed Images</p>
+
         <div className='button-container'>
           {allProccessedImages.map((file, i) => {
             const buttonStyles = {
@@ -386,6 +394,7 @@ function RenderFile(props) {
               </div>
             )
           })}
+        </div>
         </div>
       ) : (
         <></>
