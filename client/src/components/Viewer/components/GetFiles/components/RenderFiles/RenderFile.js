@@ -38,7 +38,7 @@ function RenderFile(props) {
       !isFirstRender.current &&
       previousImageNames != null
     ) {
-      const newImageNames = props.info.filter((newImage) => {
+      var newImageNames = props.info.filter((newImage) => {
         return !previousImageNames.some(
           (oldImage) =>
             oldImage.name === newImage.name &&
@@ -93,7 +93,11 @@ function RenderFile(props) {
       }
 
       if (newImageNames.length > 0) {
+        newImageNames = [...new Set(newImageNames)];
+
         console.log('New Images found:', newImageNames)
+
+        
 
         const reversedImageNames = [...newImageNames].reverse()
 
@@ -353,7 +357,7 @@ function RenderFile(props) {
       
       {showProcessed ? (
         <div className="uploaded-images-container">
-          <p class="part-title">Processed Images</p>
+          <p className="part-title">Processed Images</p>
 
         <div className='button-container'>
           {allProccessedImages.map((file, i) => {
