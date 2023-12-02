@@ -100,7 +100,7 @@ function Viewer(props) {
     
       
     
-    axios.post(config.PROCESS_URL + '/processImage', image_body, {
+    axios.post(config.PROCESS_URL + '/process/image', image_body, {
       headers: {
         authorization:
           'Bearer ' + JSON.parse(localStorage.getItem('dfs-user'))?.['token'],
