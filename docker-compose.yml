@@ -1,0 +1,19 @@
+version: "3"
+services:
+  react-frontend:
+    build:
+      context: ./client
+    ports:
+      - "3000:3000"
+
+  node-backend:
+    build:
+      context: ./server
+    ports:
+      - "5000:5000"
+
+  flask-backend:
+    build:
+      context: ./image_backend
+    ports:
+      - "4000:4000"

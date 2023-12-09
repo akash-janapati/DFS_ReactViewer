@@ -32,6 +32,8 @@ function Viewer(props) {
     "link": null,
     // "processed": "false",
   });
+  const [object,setObject] = useState("face");
+  const [technique,setTechnique] = useState("mask");
 
   const updateParentState = (updatedChildState) => {
     setParentState(updatedChildState);
@@ -76,9 +78,9 @@ function Viewer(props) {
     }
 
     // get the dropdown values
-    let object = document.getElementById("object").value;
+    let object2 = document.getElementById("object").value;
     let technique = document.getElementById("technique").value;
-    console.log("Object: ", object);
+    console.log("Object: ", object2);
     console.log("Technique: ", technique);
 
     // make an api request to the backend
@@ -93,7 +95,7 @@ function Viewer(props) {
       "name": image_name,
       "format": image_format,
       "link": image_link,
-      "object": object,
+      "object": object2,
       "technique": technique,
     };
 
@@ -131,7 +133,7 @@ function Viewer(props) {
       
   image64 = image64.replace(/^data:image\/(png|jpg|jpeg);base64,/, "");
       // upload the file using uploadFile funtion()
-      uploadBase64(image64,image_name,object,technique);
+      uploadBase64(image64,image_name,object2,technique);
       // set the parent state
 
     }
@@ -301,6 +303,18 @@ function Viewer(props) {
     // }
 
   }
+
+  const handleObjectChange = (e) => {
+    console.log(e.target.value);
+    console.log("Object Changed");
+    setObject(e.target.value);
+};
+
+const handleTechniqueChange = (e) => {
+  console.log(e.target.value);
+  console.log("Technique Changed");
+    setTechnique(e.target.value);
+};
 
   async function uploadFile(e) {
     e.preventDefault()
@@ -520,27 +534,20 @@ function Viewer(props) {
           )}
         </div>
         <div className="dropdown-container">
-          <div className="dropdown">
-            {/* Create a dropdown menu for objects to anonymize, example: "faces","numberplates" */}
-            <select name="object" id="object" className="dropdown-select">
-              <option value="face">Faces</option>
-              <option value="name_plate">Number Plates</option>
-            </select>
-          </div>
-          <div className="dropdown">
-            {/* Similarly, for anonymisation techniques, masking, blurring, replace, etc. */}
-            <select name="technique" id="technique" className="dropdown-select">
-              <option value="mask">Masking</option>
-              <option value="blur">Blurring</option>
-              <option value="replacement">Replace</option>
-            </select>
-          </div>
-          
-            {/* a process image button, with stylings */}
+            <div className="dropdown">
+                <select name="object" id="object" className="dropdown-select" value={object} onChange={handleObjectChange}>
+                    <option value="face">Faces</option>
+                    <option value="name_plate">Number Plates</option>
+                </select>
+            </div>
+            <div className="dropdown">
+                <select name="technique" id="technique" className="dropdown-select" value={technique} onChange={handleTechniqueChange}>
+                    <option value="mask">Masking</option>
+                    <option value="blur">Blurring</option>
+                    <option value="replacement">Replace</option>
+                </select>
+            </div>
             <button className="process-image" onClick={handleProcess}>Process Image</button>
-
-            
-          {/* </div> */}
         </div>
       </div>
       <div className='get-files'>
@@ -551,6 +558,8 @@ function Viewer(props) {
           uploadPercentage={uploadPercentage}
           recentUploaded={recentUploaded}
           updateParentState={updateParentState}
+          object={object}
+          technique={technique}
         />
       </div>
       

@@ -18,4 +18,11 @@
 
 #openseadragon-viewer {
   height:calc(100vh - 2 * 50px);
+  margin: 30px;
+}
+
+
+#openseadragon-viewer2 {
+  height:calc(100vh - 2 * 50px);
+  margin: 30px;
 }

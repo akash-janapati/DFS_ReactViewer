@@ -84,6 +84,8 @@ function GetFiles(props) {
           deletedFileName={deletedFileName}
           uploadPercentage = {props.uploadPercentage}
           updateParentState = {props.updateParentState}
+          object = {props.object}
+          technique = {props.technique}
         />
       ) : null}
     </div>
